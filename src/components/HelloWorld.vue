@@ -6,7 +6,7 @@
     >
       <v-flex xs12>
         <v-img
-          :src="require('../assets/logo.svg')"
+          :src="require('../assets/watering_can.png')"
           class="my-3"
           contain
           height="200"
@@ -15,12 +15,34 @@
 
       <v-flex mb-4>
         <h1 class="display-2 font-weight-bold mb-3">
-          Welcome to PLANTZ
+          Welcome to Watering Can!
         </h1>
+        We'll generate a calendar to help you remember when to water which plant!
       </v-flex>
-
-
     </v-layout>
+
+    <v-container fluid>
+      <v-flex>
+        <v-form
+        ref="form">
+        <v-text-field 
+        label="How many weeks for the watering calendar?"
+        :rules="[rules.number]"
+        v-model="params.num_of_weeks"
+        ></v-text-field>
+        <label>Please select your JSON file with plant data</label>
+        <v-file-input 
+        label="JSON Plant file" accept=".json"
+        @change="onFileChange($event)"
+        ></v-file-input>
+        <label>Select the start date for the calendar.</label>
+        <v-spacer></v-spacer>
+        <v-date-picker v-model="params.start_date" :allowed-dates="allowedDates"></v-date-picker>
+        <v-spacer></v-spacer>
+        <v-btn @click="createCalendar">Submit</v-btn>
+        </v-form>
+      </v-flex>
+    </v-container>
 
     <v-container fluid>
       <v-row
@@ -37,7 +59,7 @@
             {{day.date}}
           </v-card-title>
 
-          <v-card-text v-if="day.plants.length == 0">
+          <v-card-text v-if="!day.plants">
             No watering today!
           </v-card-text>
 
@@ -76,13 +98,40 @@ export default {
     return {
     calendar: {},
     currentDay: {},
-    show: false
+    show: false,
+    rules: {
+      number: value => /^\d+$/.test(value) || 'Please enter a number.'
+    },
+    params: {
+      start_date: "",
+      num_of_weeks: "",
+      plants: {}
+    }
     };
   },
-  created: function() {
-    axios.get("api/calendars/19").then(response => {
-      this.calendar = response.data;
-    })
+  methods: {
+    createCalendar: function() {
+      axios.post("api/calendars", this.params).then(response => {
+        this.calendar = response.data;
+      })
+    },
+    onFileChange(e) {
+      var reader = new FileReader();
+      reader.onload = (fileContents) => { //onload is called when readAsText finishes
+        this.params.plants = JSON.parse(fileContents.target.result); 
+      };
+
+      reader.readAsText(e);
+    },
+    allowedDates: (val) => {
+      var date = new Date(val);
+      if(date.getDay() === 0){
+        return true;
+      } else {
+        return false;
+      }
+      
+    },
   }
 };
 </script>
