@@ -21,10 +21,43 @@
       </v-flex>
     </v-layout>
 
-    <v-container fluid>
+
+    <v-container fluid v-if="!calendarCreated" class="form">
+      <transition name="slide-right" mode="out-in">
+        <v-form
+        ref="form" v-if="step==1" v-bind:key="1">
+          <label>How many weeks for the watering calendar?</label>
+          <v-text-field 
+          label="Number of Weeks"
+          :rules="[rules.number]"
+          v-model="params.num_of_weeks"
+          ></v-text-field>
+        </v-form>
+        <v-form
+        ref="form" v-if="step==2" v-bind:key="2">
+          <label>Please select your JSON file with plant data</label>
+          <v-file-input 
+          label="JSON Plant file" accept=".json"
+          @change="onFileChange($event)"
+          ></v-file-input>
+        </v-form>
+        <v-form
+        ref="form" v-if="step==3" v-bind:key="3">
+          <label>Select the start date for the calendar.</label>
+          <v-spacer></v-spacer>
+          <v-date-picker v-model="params.start_date" :allowed-dates="allowedDates"></v-date-picker>
+          <v-spacer></v-spacer>
+        </v-form>
+      </transition>
+      <v-btn class="button" @click="step -= 1" v-if="step != 1">Back</v-btn>
+      <v-btn class="button" @click="step+=1" v-if="step < 3">Next</v-btn>
+      <v-btn class="button" @click="createCalendar" v-if="step == 3">Submit</v-btn>
+    </v-container>
+
+    <!-- <v-container fluid v-if="!calendarCreated">
       <v-flex>
         <v-form
-        ref="form">
+        ref="form" class="form">
         <v-text-field 
         label="How many weeks for the watering calendar?"
         :rules="[rules.number]"
@@ -42,6 +75,11 @@
         <v-btn @click="createCalendar">Submit</v-btn>
         </v-form>
       </v-flex>
+      <v-btn @click="calendarCreated = true" id="">Close</v-btn>
+    </v-container> -->
+
+    <v-container fluid v-if="calendarCreated">
+      <v-btn @click="calendarCreated = false">New Calendar</v-btn>
     </v-container>
 
     <v-container fluid>
@@ -67,14 +105,14 @@
             <v-spacer></v-spacer>
             <v-btn
               icon
-              @click="show = !show; currentDay = day"
+              @click="currentDay == day ? currentDay = {} : currentDay = day"
             >
-              <v-icon>{{ show && currentDay == day ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+              <v-icon>{{ currentDay == day ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
             </v-btn>
           </v-card-actions>
 
           <v-expand-transition>
-            <div v-show="show && currentDay == day">
+            <div v-show="currentDay == day">
               <v-divider></v-divider>
       
               <v-card-text>
@@ -97,8 +135,9 @@ export default {
   data: function() {
     return {
     calendar: {},
+    calendarCreated: false,
     currentDay: {},
-    show: false,
+    step: 1,
     rules: {
       number: value => /^\d+$/.test(value) || 'Please enter a number.'
     },
@@ -111,9 +150,18 @@ export default {
   },
   methods: {
     createCalendar: function() {
-      axios.post("api/calendars", this.params).then(response => {
-        this.calendar = response.data;
-      })
+      if(this.params.start_date && this.params.plants && this.params.num_of_weeks) {
+          axios.post("api/calendars", this.params).then(response => {
+          this.calendar = response.data;
+          this.calendarCreated = true;
+          this.step = 1;
+        })
+      } else {
+        if(!this.params.start_date) { window.alert("Please select a start date."); }
+        if(!this.params.plants) { window.alert("Please upload a plants information file"); }
+        if(!this.params.num_of_weeks) { window.alert("Please select a number of weeks for the calendar."); }
+      }
+      
     },
     onFileChange(e) {
       var reader = new FileReader();
