@@ -50,7 +50,7 @@
         </v-form>
       </transition>
       <v-btn class="button" @click="step -= 1" v-if="step != 1">Back</v-btn>
-      <v-btn class="button" @click="step+=1" v-if="step < 3">Next</v-btn>
+      <v-btn class="button" @click="next()" v-if="step < 3">Next</v-btn>
       <v-btn class="button" @click="createCalendar" v-if="step == 3">Submit</v-btn>
     </v-container>
 
@@ -150,16 +150,14 @@ export default {
   },
   methods: {
     createCalendar: function() {
-      if(this.params.start_date && this.params.plants && this.params.num_of_weeks) {
+      if(this.params.start_date) {
           axios.post("api/calendars", this.params).then(response => {
           this.calendar = response.data;
           this.calendarCreated = true;
           this.step = 1;
         })
       } else {
-        if(!this.params.start_date) { window.alert("Please select a start date."); }
-        if(!this.params.plants) { window.alert("Please upload a plants information file"); }
-        if(!this.params.num_of_weeks) { window.alert("Please select a number of weeks for the calendar."); }
+        window.alert("Please select a start date.");
       }
       
     },
@@ -180,6 +178,24 @@ export default {
       }
       
     },
+    next() {
+      switch(this.step) {
+        case 1:
+          if(!this.params.num_of_weeks) { 
+            window.alert("Please select a number of weeks for the calendar."); 
+          } else {
+            this.step += 1;
+          }
+          break;
+        case 2:
+          if(!Array.isArray(this.params.plants)) { 
+              window.alert("Please upload a plants information file."); 
+            } else {
+              this.step += 1;
+            }
+            break;
+      }
+    }
   }
 };
 </script>
