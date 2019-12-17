@@ -23,35 +23,38 @@
 
 
     <v-container fluid v-if="!calendarCreated" class="form">
-      <transition name="slide-right" mode="out-in">
-        <v-form
-        ref="form" v-if="step==1" v-bind:key="1">
-          <label>How many weeks for the watering calendar?</label>
-          <v-text-field 
-          label="Number of Weeks"
-          :rules="[rules.number]"
-          v-model="params.num_of_weeks"
-          ></v-text-field>
-        </v-form>
-        <v-form
-        ref="form" v-if="step==2" v-bind:key="2">
-          <label>Please select your JSON file with plant data</label>
-          <v-file-input 
-          label="JSON Plant file" accept=".json"
-          @change="onFileChange($event)"
-          ></v-file-input>
-        </v-form>
-        <v-form
-        ref="form" v-if="step==3" v-bind:key="3">
-          <label>Select the start date for the calendar.</label>
-          <v-spacer></v-spacer>
-          <v-date-picker v-model="params.start_date" :allowed-dates="allowedDates"></v-date-picker>
-          <v-spacer></v-spacer>
-        </v-form>
-      </transition>
-      <v-btn class="button" @click="step -= 1" v-if="step != 1">Back</v-btn>
-      <v-btn class="button" @click="next()" v-if="step < 3">Next</v-btn>
-      <v-btn class="button" @click="createCalendar" v-if="step == 3">Submit</v-btn>
+      <v-card class="formCard">
+        <transition name="slide-right" mode="out-in">
+          <v-form
+          ref="form" v-if="step==1" v-bind:key="1">
+            <label>How many weeks for the watering calendar?</label>
+            <v-text-field 
+            label="Number of Weeks"
+            :rules="[rules.number]"
+            v-model="params.num_of_weeks"
+            ></v-text-field>
+          </v-form>
+          <v-form
+          ref="form" v-if="step==2" v-bind:key="2">
+            <label>Please select your JSON file with plant data</label>
+            <v-file-input 
+            label="JSON Plant file" accept=".json"
+            @change="onFileChange($event)"
+            ></v-file-input>
+          </v-form>
+          <v-form
+          ref="form" v-if="step==3" v-bind:key="3">
+            <label>Select the start date for the calendar.</label>
+            <v-spacer></v-spacer>
+            <v-date-picker v-model="params.start_date" :allowed-dates="allowedDates"></v-date-picker>
+            <v-spacer></v-spacer>
+          </v-form>
+        </transition>
+        <v-btn class="button" @click="step -= 1" v-if="step != 1">Back</v-btn>
+        <v-btn class="button" @click="next()" v-if="step < 3">Next</v-btn>
+        <v-btn class="button" @click="createCalendar" v-if="step == 3">Submit</v-btn>
+        <v-btn class="closeButton" @click="calendarCreated = !calendarCreated" v-if="calendar.water_days">close</v-btn>
+      </v-card>
     </v-container>
 
     <!-- <v-container fluid v-if="!calendarCreated">
@@ -79,13 +82,14 @@
     </v-container> -->
 
     <v-container fluid v-if="calendarCreated">
-      <v-btn @click="calendarCreated = false">New Calendar</v-btn>
+      <v-btn class="newCalendarButton" @click="calendarCreated = false">New Calendar</v-btn>
     </v-container>
 
-    <v-container fluid>
+    <v-container fluid class="calendar">
       <v-row
         align="start"
         justify="start"
+        class="row"
       >
         <v-card
           class="pa-2"
@@ -148,6 +152,9 @@ export default {
     }
     };
   },
+  created: function () {
+    document.title = 'Watering Can';
+  },
   methods: {
     createCalendar: function() {
       if(this.params.start_date) {
@@ -155,6 +162,7 @@ export default {
           this.calendar = response.data;
           this.calendarCreated = true;
           this.step = 1;
+          this.params = {};
         })
       } else {
         window.alert("Please select a start date.");
